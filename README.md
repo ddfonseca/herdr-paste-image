@@ -34,8 +34,12 @@ pasted as-is — no copy, no re-encode.
 ## Requirements
 
 - herdr `>= 0.7.0`
-- A clipboard source: WSL (`powershell.exe` on `$PATH`), `wl-paste` (Wayland),
-  `xclip` (X11), or macOS (`pngpaste` recommended)
+- A clipboard source:
+  - **WSL** — works out of the box, no extra install: the Windows clipboard is
+    read through `powershell.exe` (WSL interop)
+  - **Wayland** — `wl-paste` (`wl-clipboard`)
+  - **X11** — `xclip`
+  - **macOS** — `pngpaste` recommended, `osascript` fallback
 - Tested on WSL2; Linux and macOS backends follow the same shape
 
 ## Install
@@ -90,6 +94,12 @@ HERDR_PASTE_IMAGE_KEEP_DAYS=0
 - **Failures are toasts, not crashes.** No image in the clipboard, no focused
   pane, missing clipboard tool: each shows a herdr notification and exits
   non-zero. `herdr plugin log list --plugin herdr-paste-image` has the details.
+  A PowerShell error on WSL (interop missing, clipboard access denied) is
+  reported as itself, not disguised as an empty clipboard.
+- **Save paths with apostrophes or accents work on WSL.** The path crosses into
+  PowerShell through `WSLENV`, not through the command line — the command line
+  eats backslashes and non-ASCII, and a plain env var doesn't cross the
+  WSL/Win32 boundary at all.
 - **Windows.** The manifest declares `platforms = ["linux", "macos"]` — under
   WSL that's the Linux side, which is where your agents run. A native Windows
   herdr won't load the plugin, so if you sync one `config.toml` to both, the

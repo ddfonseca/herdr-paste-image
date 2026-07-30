@@ -81,21 +81,33 @@ if grep -qi microsoft /proc/version 2>/dev/null; then
   command -v powershell.exe >/dev/null 2>&1 || fail "powershell.exe not found in PATH (needed on WSL)."
   win_path="$(wslpath -w "$file_path")"
 
-  ps_out="$(powershell.exe -NoProfile -STA -Command "
+  # The save path is handed over in the environment rather than interpolated
+  # into the PowerShell source: a save dir holding an apostrophe (C:\Users\
+  # O'Brien\...) would otherwise close the string literal early. Plain env vars
+  # do NOT cross the WSL/Win32 boundary — only what WSLENV names does — and the
+  # command line itself mangles backslashes and non-ASCII, so WSLENV is the only
+  # channel here that survives paths like "Área de Trabalho".
+  ps_err="$(mktemp)"
+  ps_out="$(HERDR_PASTE_IMAGE_WIN_PATH="$win_path" \
+            WSLENV="${WSLENV:+$WSLENV:}HERDR_PASTE_IMAGE_WIN_PATH" \
+            powershell.exe -NoProfile -STA -Command '
+      [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
       Add-Type -AssemblyName System.Windows.Forms
-      \$img = [System.Windows.Forms.Clipboard]::GetImage()
-      if (\$img) {
-          \$img.Save('$win_path', [System.Drawing.Imaging.ImageFormat]::Png)
-          Write-Output 'SAVED'
+      $img = [System.Windows.Forms.Clipboard]::GetImage()
+      if ($img) {
+          $img.Save($env:HERDR_PASTE_IMAGE_WIN_PATH, [System.Drawing.Imaging.ImageFormat]::Png)
+          Write-Output "SAVED"
       } else {
-          \$files = [System.Windows.Forms.Clipboard]::GetFileDropList()
-          if (\$files -and \$files.Count -ge 1) {
-              Write-Output ('FILE:' + \$files[0])
+          $files = [System.Windows.Forms.Clipboard]::GetFileDropList()
+          if ($files -and $files.Count -ge 1) {
+              Write-Output ("FILE:" + $files[0])
           } else {
-              Write-Output 'NO_IMAGE'
+              Write-Output "NO_IMAGE"
           }
       }
-  " 2>&1 | tr -d '\r')"
+  ' 2>"$ps_err" | tr -d '\r' || true)"
+  ps_stderr="$(tr -d '\r' < "$ps_err" | tr '\n' ' ' | cut -c1-300)"
+  rm -f "$ps_err"
 
   case "$ps_out" in
     FILE:*)
@@ -106,7 +118,10 @@ if grep -qi microsoft /proc/version 2>/dev/null; then
       file_path="$lin_src"
       ;;
     *SAVED*) ;;
-    *) fail "No image in the clipboard." ;;
+    *NO_IMAGE*) fail "No image in the clipboard." ;;
+    # Anything else is PowerShell itself failing — missing WSL interop, blocked
+    # assembly load, denied clipboard. Say so instead of blaming the clipboard.
+    *) fail "PowerShell failed: ${ps_stderr:-${ps_out:-no output}}" ;;
   esac
 
 elif [ -n "${WAYLAND_DISPLAY:-}" ] && command -v wl-paste >/dev/null 2>&1; then
