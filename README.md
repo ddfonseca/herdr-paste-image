@@ -1,11 +1,15 @@
 # herdr-paste-image
 
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![herdr ≥ 0.7.0](https://img.shields.io/badge/herdr-%E2%89%A5%200.7.0-8b5cf6.svg)](https://herdr.dev)
+[![platforms: WSL · Linux · macOS](https://img.shields.io/badge/platforms-WSL%20%C2%B7%20Linux%20%C2%B7%20macOS-lightgrey.svg)](#requirements)
+
 Paste a screenshot into a coding agent running inside [herdr](https://herdr.dev).
 
 Press the key, and the image sitting in your system clipboard is written to a
 file and its **path** is typed into the focused pane — which is what Claude
 Code, Codex & friends actually need in order to look at an image. It's
-[`tmux-paste-image`](https://github.com/ddfonseca/tmux-paste-image), ported to
+[`tmux-paste-image`](https://github.com/jkhas8/tmux-paste-image), ported to
 herdr's plugin API.
 
 ## How it works
@@ -37,7 +41,10 @@ pasted as-is — no copy, no re-encode.
 ## Install
 
 ```bash
-herdr plugin link /path/to/herdr-paste-image     # local checkout
+herdr plugin install ddfonseca/herdr-paste-image   # from GitHub
+# or, for a local checkout:
+herdr plugin link /path/to/herdr-paste-image
+
 herdr plugin action list --plugin herdr-paste-image
 ```
 
@@ -91,6 +98,12 @@ HERDR_PASTE_IMAGE_KEEP_DAYS=0
   `.jpg`) instead of being mislabelled as PNG.
 - **Housekeeping is lazy.** Old images are pruned when you paste, not on a
   timer — the cache only shrinks while you're using it.
+
+## Credits
+
+The idea, and the workflow it replaces, come from
+[`jkhas8/tmux-paste-image`](https://github.com/jkhas8/tmux-paste-image) — the
+tmux plugin this is a port of.
 
 ## License
 
