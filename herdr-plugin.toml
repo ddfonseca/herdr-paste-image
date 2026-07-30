@@ -1,0 +1,17 @@
+id = "herdr-paste-image"
+name = "Herdr Paste Image"
+version = "0.1.0"
+min_herdr_version = "0.7.0"
+description = "Save the clipboard image to a file and paste its path into the focused pane"
+platforms = ["linux", "macos"]
+
+# One action. Bound to a key in herdr's config (see README). It grabs the image
+# sitting in the system clipboard, writes it to disk, and types the resulting
+# path into the focused pane — which is what a coding agent (Claude Code, Codex,
+# ...) needs in order to read the image.
+
+[[actions]]
+id = "paste"
+title = "Paste clipboard image as a file path"
+contexts = ["global"]
+command = ["bash", "paste-image.sh"]
