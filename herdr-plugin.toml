@@ -1,17 +1,31 @@
 id = "herdr-paste-image"
 name = "Herdr Paste Image"
-version = "0.1.0"
+version = "0.2.0"
 min_herdr_version = "0.7.0"
 description = "Save the clipboard image to a file and paste its path into the focused pane"
-platforms = ["linux", "macos"]
+platforms = ["linux", "macos", "windows"]
 
-# One action. Bound to a key in herdr's config (see README). It grabs the image
-# sitting in the system clipboard, writes it to disk, and types the resulting
-# path into the focused pane — which is what a coding agent (Claude Code, Codex,
-# ...) needs in order to read the image.
+# Two actions, same job, one per platform family. Bind whichever one matches
+# your herdr install to a key in herdr's config (see README). Each grabs the
+# image sitting in the system clipboard, writes it to disk, and types the
+# resulting path into the focused pane — which is what a coding agent (Claude
+# Code, Codex, ...) needs in order to read the image.
+#
+# WSL counts as "linux" here: it's the Linux side of herdr that loads the
+# bash action, which then reaches across to the Windows clipboard via
+# powershell.exe interop. The windows action is for a native
+# x86_64-pc-windows-msvc herdr install instead.
 
 [[actions]]
 id = "paste"
 title = "Paste clipboard image as a file path"
 contexts = ["global"]
+platforms = ["linux", "macos"]
 command = ["bash", "paste-image.sh"]
+
+[[actions]]
+id = "paste-windows"
+title = "Paste clipboard image as a file path (native Windows)"
+contexts = ["global"]
+platforms = ["windows"]
+command = ["powershell.exe", "-NoProfile", "-STA", "-ExecutionPolicy", "Bypass", "-File", "paste-image.ps1"]
